@@ -1,0 +1,681 @@
+# global parameters;
+# to be sourced by create_docbase.sh, instantiate_docbase.sh and before any work on those docbases from the command-line; 
+# edit it as needed;
+# Usage:
+#    . global_parameters [seed_repo [new_repo]]
+# where the optional command-line parameters are not repository names but stems to their settings;
+# the stem $seed_repo determines the docbase to be created or used as a seed during the instanciation of the docbase defined by the stem $new_repo;
+# both docbases' details are taken from this global_parameters file;
+# if no parameter is given, it assumes a docbase creation is requested whose hard-coded stem is DCTM0;
+
+# set scripts_dir to this sourced script's location;
+export scripts_dir=$(pwd $(cd $(dirname ${BASH_SOURCE[0]})))
+
+# new instances of the seed docbase are hosted in ${dctm_machine};
+# dctm_machine can be a host name or an IP address;
+# actually, the instanciation is not done remotely but always locally, so this setting is only used to make sure we are logged on ${dctm_machine};
+dctm_machine=cs2
+dctm_domain=localdomain.org
+
+# O/S owner of the documentum installations on ${dctm_machine};
+dctm_owner=dmadmin
+dctm_password=${dctm_owner}
+
+# global root path of all the custom software installations;
+# for our purpose, only ${dctm_root} defined below is used;
+binaries_root=/u01
+
+# the $DOCUMENTUM directory is located in ${dctm_machine}:${dctm_root}/${ACTIVE_DOCBASE}, e.g. O84:/u01/dctm/seed/documentum,  ${dctm_machine}:/u01/dctm/dctm1/documentum,  ${dctm_machine}:/u01/dctm/development/documentum, ...
+# having ${dctm_root} allows several distinct docbase installation (binaries + content) starting from the same place;
+dctm_root=${binaries_root}/dctm
+
+# downloaded software is stored here;
+dctm_software=${scripts_dir}/software
+
+# relevant software packages;
+jdk_download_url=https://corretto.aws/downloads/latest
+jdk_package=amazon-corretto-11-x64-linux-jdk.tar.gz
+
+# seed docbase stuff;
+# these SEED_HOST and SEED_INSTALL_OWNER parameters must not change once the SEED docbase has been created;
+# if creating multiple seed docbases, make sure they are correct for the one used as a model by the new instance because the
+# Migration Utility uses them to change them if needed;
+# for simplification, lots of variables, e.g. <stem>_DATABASE_OWNER, are set to the docbase name <stem>_DOCBASE;
+DCTM0_DOCBASE=seed
+DCTM0_DOCBASE_ID=1
+DCTM0_SERVICE_NAME=${DCTM0_DOCBASE}
+DCTM0_SERVICE_PORT=50000
+DCTM0_RDBMS=oracle
+DCTM0_DATABASE_OWNER=${DCTM0_DOCBASE}
+DCTM0_DATABASE_PASSWORD=${DCTM0_DOCBASE}
+[[ ${DCTM0_RDBMS} == "postgres" ]] && DCTM0_DB_SERVER_PORT=5432
+DCTM0_ROOT=${dctm_root}/${DCTM0_DOCBASE}
+DCTM0_HOST=cs2
+DCTM0_INSTALL_OWNER=${dctm_owner}
+DCTM0_INSTALL_PASSWORD=${DCTM0_INSTALL_OWNER}
+DCTM0_DOCBROKER_NAME=docbroker
+DCTM0_DOCBROKER_PORT=1489
+DCTM0_SERVER_HTTP_PORT=9080
+DCTM0_SERVER_HTTP_MEMORY="-Xms512m -Xmx512m"
+
+# define as many docbases as needed;
+# use $ACTIVE_DOCBASE_STEM_VAR to select the one to be instanciated, or pass the stem as an argument;
+# the stem is the prefix to a bunch of parameters, e.g. DCTM1, DCTM2, DCTMx in the definitions below;
+# it works as a pointer to a docbase's set of parameters;
+# if instantiating several docbases with their own docbroker on the same machine, make sure the ports are defined uniquely here;
+# ditto for the method server base port and the postgresql server if using it;
+#
+# ORA_DCTM1;
+ORA_DCTM1_DOCBASE=repo01
+ORA_DCTM1_DOCBASE_ID=10001
+ORA_DCTM1_SERVICE_NAME=${ORA_DCTM1_DOCBASE}
+ORA_DCTM1_SERVICE_PORT=50010
+ORA_DCTM1_RDBMS=oracle
+ORA_DCTM1_DATABASE_OWNER=${ORA_DCTM1_DOCBASE}
+ORA_DCTM1_DATABASE_PASSWORD=${ORA_DCTM1_DOCBASE}
+[[ ${ORA_DCTM1_RDBMS} == "postgres" ]] && ORA_DCTM1_DB_SERVER_PORT=5412
+ORA_DCTM1_ROOT=${dctm_root}/${ORA_DCTM1_DOCBASE}
+ORA_DCTM1_HOST=cs2
+ORA_DCTM1_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM1_INSTALL_PASSWORD=${ORA_DCTM1_INSTALL_OWNER}
+ORA_DCTM1_DOCBROKER_NAME=docbroker1
+ORA_DCTM1_DOCBROKER_PORT=1489
+ORA_DCTM1_SERVER_HTTP_PORT=9180
+ORA_DCTM1_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM2;
+ORA_DCTM2_DOCBASE=repo02
+ORA_DCTM2_DOCBASE_ID=10002
+ORA_DCTM2_SERVICE_NAME=${ORA_DCTM2_DOCBASE}
+ORA_DCTM2_SERVICE_PORT=50020
+ORA_DCTM2_RDBMS=oracle
+ORA_DCTM2_DATABASE_OWNER=${ORA_DCTM2_DOCBASE}
+ORA_DCTM2_DATABASE_PASSWORD=${ORA_DCTM2_DOCBASE}
+[[ ${ORA_DCTM2_RDBMS} == "postgres" ]] && ORA_DCTM2_DB_SERVER_PORT=5412
+ORA_DCTM2_ROOT=${dctm_root}/${ORA_DCTM2_DOCBASE}
+ORA_DCTM2_HOST=cs2
+ORA_DCTM2_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM2_INSTALL_PASSWORD=${ORA_DCTM2_INSTALL_OWNER}
+ORA_DCTM2_DOCBROKER_NAME=docbroker2
+ORA_DCTM2_DOCBROKER_PORT=1491
+ORA_DCTM2_SERVER_HTTP_PORT=9200
+ORA_DCTM2_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM3;
+ORA_DCTM3_DOCBASE=repo03
+ORA_DCTM3_DOCBASE_ID=10003
+ORA_DCTM3_SERVICE_NAME=${ORA_DCTM3_DOCBASE}
+ORA_DCTM3_SERVICE_PORT=50030
+ORA_DCTM3_RDBMS=oracle
+ORA_DCTM3_DATABASE_OWNER=${ORA_DCTM3_DOCBASE}
+ORA_DCTM3_DATABASE_PASSWORD=${ORA_DCTM3_DOCBASE}
+[[ ${ORA_DCTM3_RDBMS} == "postgres" ]] && ORA_DCTM3_DB_SERVER_PORT=5412
+ORA_DCTM3_ROOT=${dctm_root}/${ORA_DCTM3_DOCBASE}
+ORA_DCTM3_HOST=cs2
+ORA_DCTM3_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM3_INSTALL_PASSWORD=${ORA_DCTM3_INSTALL_OWNER}
+ORA_DCTM3_DOCBROKER_NAME=docbroker3
+ORA_DCTM3_DOCBROKER_PORT=1493
+ORA_DCTM3_SERVER_HTTP_PORT=9220
+ORA_DCTM3_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM4;
+ORA_DCTM4_DOCBASE=repo04
+ORA_DCTM4_DOCBASE_ID=10004
+ORA_DCTM4_SERVICE_NAME=${ORA_DCTM4_DOCBASE}
+ORA_DCTM4_SERVICE_PORT=50040
+ORA_DCTM4_RDBMS=oracle
+ORA_DCTM4_DATABASE_OWNER=${ORA_DCTM4_DOCBASE}
+ORA_DCTM4_DATABASE_PASSWORD=${ORA_DCTM4_DOCBASE}
+[[ ${ORA_DCTM4_RDBMS} == "postgres" ]] && ORA_DCTM4_DB_SERVER_PORT=5412
+ORA_DCTM4_ROOT=${dctm_root}/${ORA_DCTM4_DOCBASE}
+ORA_DCTM4_HOST=cs2
+ORA_DCTM4_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM4_INSTALL_PASSWORD=${ORA_DCTM4_INSTALL_OWNER}
+ORA_DCTM4_DOCBROKER_NAME=docbroker4
+ORA_DCTM4_DOCBROKER_PORT=1495
+ORA_DCTM4_SERVER_HTTP_PORT=9240
+ORA_DCTM4_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM5;
+ORA_DCTM5_DOCBASE=repo05
+ORA_DCTM5_DOCBASE_ID=10005
+ORA_DCTM5_SERVICE_NAME=${ORA_DCTM5_DOCBASE}
+ORA_DCTM5_SERVICE_PORT=50050
+ORA_DCTM5_RDBMS=oracle
+ORA_DCTM5_DATABASE_OWNER=${ORA_DCTM5_DOCBASE}
+ORA_DCTM5_DATABASE_PASSWORD=${ORA_DCTM5_DOCBASE}
+[[ ${ORA_DCTM5_RDBMS} == "postgres" ]] && ORA_DCTM5_DB_SERVER_PORT=5412
+ORA_DCTM5_ROOT=${dctm_root}/${ORA_DCTM5_DOCBASE}
+ORA_DCTM5_HOST=cs2
+ORA_DCTM5_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM5_INSTALL_PASSWORD=${ORA_DCTM5_INSTALL_OWNER}
+ORA_DCTM5_DOCBROKER_NAME=docbroker5
+ORA_DCTM5_DOCBROKER_PORT=1497
+ORA_DCTM5_SERVER_HTTP_PORT=9260
+ORA_DCTM5_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM6;
+ORA_DCTM6_DOCBASE=repo06
+ORA_DCTM6_DOCBASE_ID=10006
+ORA_DCTM6_SERVICE_NAME=${ORA_DCTM6_DOCBASE}
+ORA_DCTM6_SERVICE_PORT=50060
+ORA_DCTM6_RDBMS=oracle
+ORA_DCTM6_DATABASE_OWNER=${ORA_DCTM6_DOCBASE}
+ORA_DCTM6_DATABASE_PASSWORD=${ORA_DCTM6_DOCBASE}
+[[ ${ORA_DCTM6_RDBMS} == "postgres" ]] && ORA_DCTM6_DB_SERVER_PORT=5412
+ORA_DCTM6_ROOT=${dctm_root}/${ORA_DCTM6_DOCBASE}
+ORA_DCTM6_HOST=cs2
+ORA_DCTM6_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM6_INSTALL_PASSWORD=${ORA_DCTM6_INSTALL_OWNER}
+ORA_DCTM6_DOCBROKER_NAME=docbroker6
+ORA_DCTM6_DOCBROKER_PORT=1499
+ORA_DCTM6_SERVER_HTTP_PORT=9280
+ORA_DCTM6_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM7;
+ORA_DCTM7_DOCBASE=repo07
+ORA_DCTM7_DOCBASE_ID=10007
+ORA_DCTM7_SERVICE_NAME=${ORA_DCTM7_DOCBASE}
+ORA_DCTM7_SERVICE_PORT=50070
+ORA_DCTM7_RDBMS=oracle
+ORA_DCTM7_DATABASE_OWNER=${ORA_DCTM7_DOCBASE}
+ORA_DCTM7_DATABASE_PASSWORD=${ORA_DCTM7_DOCBASE}
+[[ ${ORA_DCTM7_RDBMS} == "postgres" ]] && ORA_DCTM7_DB_SERVER_PORT=5412
+ORA_DCTM7_ROOT=${dctm_root}/${ORA_DCTM7_DOCBASE}
+ORA_DCTM7_HOST=cs2
+ORA_DCTM7_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM7_INSTALL_PASSWORD=${ORA_DCTM7_INSTALL_OWNER}
+ORA_DCTM7_DOCBROKER_NAME=docbroker6
+ORA_DCTM7_DOCBROKER_PORT=1501
+ORA_DCTM7_SERVER_HTTP_PORT=9300
+ORA_DCTM7_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM8;
+ORA_DCTM8_DOCBASE=repo08
+ORA_DCTM8_DOCBASE_ID=10008
+ORA_DCTM8_SERVICE_NAME=${ORA_DCTM8_DOCBASE}
+ORA_DCTM8_SERVICE_PORT=50080
+ORA_DCTM8_RDBMS=oracle
+ORA_DCTM8_DATABASE_OWNER=${ORA_DCTM8_DOCBASE}
+ORA_DCTM8_DATABASE_PASSWORD=${ORA_DCTM8_DOCBASE}
+[[ ${ORA_DCTM8_RDBMS} == "postgres" ]] && ORA_DCTM8_DB_SERVER_PORT=5412
+ORA_DCTM8_ROOT=${dctm_root}/${ORA_DCTM8_DOCBASE}
+ORA_DCTM8_HOST=cs2
+ORA_DCTM8_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM8_INSTALL_PASSWORD=${ORA_DCTM8_INSTALL_OWNER}
+ORA_DCTM8_DOCBROKER_NAME=docbroker8
+ORA_DCTM8_DOCBROKER_PORT=1503
+ORA_DCTM8_SERVER_HTTP_PORT=9320
+ORA_DCTM8_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM9;
+ORA_DCTM9_DOCBASE=repo09
+ORA_DCTM9_DOCBASE_ID=10009
+ORA_DCTM9_SERVICE_NAME=${ORA_DCTM9_DOCBASE}
+ORA_DCTM9_SERVICE_PORT=50090
+ORA_DCTM9_RDBMS=oracle
+ORA_DCTM9_DATABASE_OWNER=${ORA_DCTM9_DOCBASE}
+ORA_DCTM9_DATABASE_PASSWORD=${ORA_DCTM9_DOCBASE}
+[[ ${ORA_DCTM9_RDBMS} == "postgres" ]] && ORA_DCTM9_DB_SERVER_PORT=5412
+ORA_DCTM9_ROOT=${dctm_root}/${ORA_DCTM9_DOCBASE}
+ORA_DCTM9_HOST=cs2
+ORA_DCTM9_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM9_INSTALL_PASSWORD=${ORA_DCTM9_INSTALL_OWNER}
+ORA_DCTM9_DOCBROKER_NAME=docbroker9
+ORA_DCTM9_DOCBROKER_PORT=1505
+ORA_DCTM9_SERVER_HTTP_PORT=9340
+ORA_DCTM9_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# ORA_DCTM10;
+ORA_DCTM10_DOCBASE=repo10
+ORA_DCTM10_DOCBASE_ID=10100
+ORA_DCTM10_SERVICE_NAME=${ORA_DCTM10_DOCBASE}
+ORA_DCTM10_SERVICE_PORT=50110
+ORA_DCTM10_RDBMS=oracle
+ORA_DCTM10_DATABASE_OWNER=${ORA_DCTM10_DOCBASE}
+ORA_DCTM10_DATABASE_PASSWORD=${ORA_DCTM10_DOCBASE}
+[[ ${ORA_DCTM10_RDBMS} == "postgres" ]] && ORA_DCTM10_DB_SERVER_PORT=5412
+ORA_DCTM10_ROOT=${dctm_root}/${ORA_DCTM10_DOCBASE}
+ORA_DCTM10_HOST=cs2
+ORA_DCTM10_INSTALL_OWNER=${dctm_owner}
+ORA_DCTM10_INSTALL_PASSWORD=${ORA_DCTM10_INSTALL_OWNER}
+ORA_DCTM10_DOCBROKER_NAME=docbroker10
+ORA_DCTM10_DOCBROKER_PORT=1507
+ORA_DCTM10_SERVER_HTTP_PORT=9360
+ORA_DCTM10_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM1;
+DCTM1_DOCBASE=repo01
+DCTM1_DOCBASE_ID=10001
+DCTM1_SERVICE_NAME=${DCTM1_DOCBASE}
+DCTM1_SERVICE_PORT=50010
+DCTM1_RDBMS=oracle
+DCTM1_DATABASE_OWNER=${DCTM1_DOCBASE}
+DCTM1_DATABASE_PASSWORD=${DCTM1_DOCBASE}
+[[ ${DCTM1_RDBMS} == "postgres" ]] && DCTM1_DB_SERVER_PORT=5412
+DCTM1_ROOT=${dctm_root}/${DCTM1_DOCBASE}
+DCTM1_HOST=cs2
+DCTM1_INSTALL_OWNER=${dctm_owner}
+DCTM1_INSTALL_PASSWORD=${DCTM1_INSTALL_OWNER}
+DCTM1_DOCBROKER_NAME=docbroker01
+DCTM1_DOCBROKER_PORT=1489
+DCTM1_SERVER_HTTP_PORT=9180
+DCTM1_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM2;
+DCTM2_DOCBASE=repo02
+DCTM2_DOCBASE_ID=10002
+DCTM2_SERVICE_NAME=${DCTM2_DOCBASE}
+DCTM2_SERVICE_PORT=50020
+DCTM2_RDBMS=postgres
+DCTM2_DATABASE_OWNER=${DCTM2_DOCBASE}
+DCTM2_DATABASE_PASSWORD=${DCTM2_DOCBASE}
+[[ ${DCTM2_RDBMS} == "postgres" ]] && DCTM2_DB_SERVER_PORT=5422
+DCTM2_ROOT=${dctm_root}/${DCTM2_DOCBASE}
+DCTM2_HOST=cs2
+DCTM2_INSTALL_OWNER=${dctm_owner}
+DCTM2_INSTALL_PASSWORD=${DCTM2_INSTALL_OWNER}
+DCTM2_DOCBROKER_NAME=docbroker02
+DCTM2_DOCBROKER_PORT=1491
+DCTM2_SERVER_HTTP_PORT=9280
+DCTM2_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM3;
+DCTM3_DOCBASE=repo03
+DCTM3_DOCBASE_ID=10003
+DCTM3_SERVICE_NAME=${DCTM3_DOCBASE}
+DCTM3_SERVICE_PORT=50030
+DCTM3_RDBMS=postgres
+DCTM3_DATABASE_OWNER=${DCTM3_DOCBASE}
+DCTM3_DATABASE_PASSWORD=${DCTM3_DOCBASE}
+[[ ${DCTM3_RDBMS} == "postgres" ]] && DCTM3_DB_SERVER_PORT=5432
+DCTM3_ROOT=${dctm_root}/${DCTM3_DOCBASE}
+DCTM3_HOST=cs2
+DCTM3_INSTALL_OWNER=${dctm_owner}
+DCTM3_INSTALL_PASSWORD=${DCTM3_INSTALL_OWNER}
+DCTM3_DOCBROKER_NAME=docbroker03
+DCTM3_DOCBROKER_PORT=1493
+DCTM3_SERVER_HTTP_PORT=9380
+DCTM3_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM4;
+DCTM4_DOCBASE=repo04
+DCTM4_DOCBASE_ID=10004
+DCTM4_SERVICE_NAME=${DCTM4_DOCBASE}
+DCTM4_SERVICE_PORT=50040
+DCTM4_RDBMS=postgres
+DCTM4_DATABASE_OWNER=${DCTM4_DOCBASE}
+DCTM4_DATABASE_PASSWORD=${DCTM4_DOCBASE}
+[[ ${DCTM4_RDBMS} == "postgres" ]] && DCTM4_DB_SERVER_PORT=5442
+DCTM4_ROOT=${dctm_root}/${DCTM4_DOCBASE}
+DCTM4_HOST=cs2
+DCTM4_INSTALL_OWNER=${dctm_owner}
+DCTM4_INSTALL_PASSWORD=${DCTM4_INSTALL_OWNER}
+DCTM4_DOCBROKER_NAME=docbroker04
+DCTM4_DOCBROKER_PORT=1495
+DCTM4_SERVER_HTTP_PORT=9480
+DCTM4_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM5;
+DCTM5_DOCBASE=repo05
+DCTM5_DOCBASE_ID=10005
+DCTM5_SERVICE_NAME=${DCTM5_DOCBASE}
+DCTM5_SERVICE_PORT=50050
+DCTM5_RDBMS=postgres
+DCTM5_DATABASE_OWNER=${DCTM5_DOCBASE}
+DCTM5_DATABASE_PASSWORD=${DCTM5_DOCBASE}
+[[ ${DCTM5_RDBMS} == "postgres" ]] && DCTM5_DB_SERVER_PORT=5452
+DCTM5_ROOT=${dctm_root}/${DCTM5_DOCBASE}
+DCTM5_HOST=cs2
+DCTM5_INSTALL_OWNER=${dctm_owner}
+DCTM5_INSTALL_PASSWORD=${DCTM5_INSTALL_OWNER}
+DCTM5_DOCBROKER_NAME=docbroker05
+DCTM5_DOCBROKER_PORT=1497
+DCTM5_SERVER_HTTP_PORT=9580
+DCTM5_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM6;
+DCTM6_DOCBASE=repo06
+DCTM6_DOCBASE_ID=10006
+DCTM6_SERVICE_NAME=${DCTM6_DOCBASE}
+DCTM6_SERVICE_PORT=50060
+DCTM6_RDBMS=postgres
+DCTM6_DATABASE_OWNER=${DCTM6_DOCBASE}
+DCTM6_DATABASE_PASSWORD=${DCTM6_DOCBASE}
+[[ ${DCTM6_RDBMS} == "postgres" ]] && DCTM6_DB_SERVER_PORT=5462
+DCTM6_ROOT=${dctm_root}/${DCTM6_DOCBASE}
+DCTM6_HOST=cs2
+DCTM6_INSTALL_OWNER=${dctm_owner}
+DCTM6_INSTALL_PASSWORD=${DCTM6_INSTALL_OWNER}
+DCTM6_DOCBROKER_NAME=docbroker06
+DCTM6_DOCBROKER_PORT=1499
+DCTM6_SERVER_HTTP_PORT=9680
+DCTM6_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM7;
+DCTM7_DOCBASE=repo07
+DCTM7_DOCBASE_ID=10007
+DCTM7_SERVICE_NAME=${DCTM7_DOCBASE}
+DCTM7_SERVICE_PORT=50070
+DCTM7_RDBMS=postgres
+DCTM7_DATABASE_OWNER=${DCTM7_DOCBASE}
+DCTM7_DATABASE_PASSWORD=${DCTM7_DOCBASE}
+[[ ${DCTM7_RDBMS} == "postgres" ]] && DCTM7_DB_SERVER_PORT=5472
+DCTM7_ROOT=${dctm_root}/${DCTM7_DOCBASE}
+DCTM7_HOST=cs2
+DCTM7_INSTALL_OWNER=${dctm_owner}
+DCTM7_INSTALL_PASSWORD=${DCTM7_INSTALL_OWNER}
+DCTM7_DOCBROKER_NAME=docbroker07
+DCTM7_DOCBROKER_PORT=1501
+DCTM7_SERVER_HTTP_PORT=9700
+DCTM7_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM8;
+DCTM8_DOCBASE=repo08
+DCTM8_DOCBASE_ID=10008
+DCTM8_SERVICE_NAME=${DCTM8_DOCBASE}
+DCTM8_SERVICE_PORT=50080
+DCTM8_RDBMS=postgres
+DCTM8_DATABASE_OWNER=${DCTM8_DOCBASE}
+DCTM8_DATABASE_PASSWORD=${DCTM8_DOCBASE}
+[[ ${DCTM8_RDBMS} == "postgres" ]] && DCTM8_DB_SERVER_PORT=5482
+DCTM8_ROOT=${dctm_root}/${DCTM8_DOCBASE}
+DCTM8_HOST=cs2
+DCTM8_INSTALL_OWNER=${dctm_owner}
+DCTM8_INSTALL_PASSWORD=${DCTM8_INSTALL_OWNER}
+DCTM8_DOCBROKER_NAME=docbroker08
+DCTM8_DOCBROKER_PORT=1503
+DCTM8_SERVER_HTTP_PORT=9720
+DCTM8_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM9;
+DCTM9_DOCBASE=repo09
+DCTM9_DOCBASE_ID=10009
+DCTM9_SERVICE_NAME=${DCTM9_DOCBASE}
+DCTM9_SERVICE_PORT=50090
+DCTM9_RDBMS=postgres
+DCTM9_DATABASE_OWNER=${DCTM9_DOCBASE}
+DCTM9_DATABASE_PASSWORD=${DCTM9_DOCBASE}
+[[ ${DCTM9_RDBMS} == "postgres" ]] && DCTM9_DB_SERVER_PORT=5492
+DCTM9_ROOT=${dctm_root}/${DCTM9_DOCBASE}
+DCTM9_HOST=cs2
+DCTM9_INSTALL_OWNER=${dctm_owner}
+DCTM9_INSTALL_PASSWORD=${DCTM9_INSTALL_OWNER}
+DCTM9_DOCBROKER_NAME=docbroker09
+DCTM9_DOCBROKER_PORT=1505
+DCTM9_SERVER_HTTP_PORT=9740
+DCTM9_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM10;
+DCTM10_DOCBASE=repo10
+DCTM10_DOCBASE_ID=100011
+DCTM10_SERVICE_NAME=${DCTM10_DOCBASE}
+DCTM10_SERVICE_PORT=50100
+DCTM10_RDBMS=postgres
+DCTM10_DATABASE_OWNER=${DCTM10_DOCBASE}
+DCTM10_DATABASE_PASSWORD=${DCTM10_DOCBASE}
+[[ ${DCTM10_RDBMS} == "postgres" ]] && DCTM10_DB_SERVER_PORT=5500
+DCTM10_ROOT=${dctm_root}/${DCTM10_DOCBASE}
+DCTM10_HOST=cs2
+DCTM10_INSTALL_OWNER=${dctm_owner}
+DCTM10_INSTALL_PASSWORD=${DCTM10_INSTALL_OWNER}
+DCTM10_DOCBROKER_NAME=docbroker010
+DCTM10_DOCBROKER_PORT=1507
+DCTM10_SERVER_HTTP_PORT=9760
+DCTM10_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM11;
+DCTM11_DOCBASE=repo11
+DCTM11_DOCBASE_ID=100012
+DCTM11_SERVICE_NAME=${DCTM11_DOCBASE}
+DCTM11_SERVICE_PORT=50110
+DCTM11_RDBMS=postgres
+DCTM11_DATABASE_OWNER=${DCTM11_DOCBASE}
+DCTM11_DATABASE_PASSWORD=${DCTM11_DOCBASE}
+[[ ${DCTM11_RDBMS} == "postgres" ]] && DCTM11_DB_SERVER_PORT=5510
+DCTM11_ROOT=${dctm_root}/${DCTM11_DOCBASE}
+DCTM11_HOST=cs2
+DCTM11_INSTALL_OWNER=${dctm_owner}
+DCTM11_INSTALL_PASSWORD=${DCTM11_INSTALL_OWNER}
+DCTM11_DOCBROKER_NAME=docbroker010
+DCTM11_DOCBROKER_PORT=1509
+DCTM11_SERVER_HTTP_PORT=9780
+DCTM11_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTM12;
+DCTM12_DOCBASE=repo12
+DCTM12_DOCBASE_ID=100013
+DCTM12_SERVICE_NAME=${DCTM12_DOCBASE}
+DCTM12_SERVICE_PORT=50120
+DCTM12_RDBMS=postgres
+DCTM12_DATABASE_OWNER=${DCTM12_DOCBASE}
+DCTM12_DATABASE_PASSWORD=${DCTM12_DOCBASE}
+[[ ${DCTM12_RDBMS} == "postgres" ]] && DCTM12_DB_SERVER_PORT=5520
+DCTM12_ROOT=${dctm_root}/${DCTM12_DOCBASE}
+DCTM12_HOST=cs2
+DCTM12_INSTALL_OWNER=${dctm_owner}
+DCTM12_INSTALL_PASSWORD=${DCTM12_INSTALL_OWNER}
+DCTM12_DOCBROKER_NAME=docbroker010
+DCTM12_DOCBROKER_PORT=1511
+DCTM12_SERVER_HTTP_PORT=9800
+DCTM12_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# # DCTM20;
+DCTM20_DOCBASE=repo20
+DCTM20_DOCBASE_ID=10021
+DCTM20_SERVICE_NAME=${DCTM20_DOCBASE}
+DCTM20_SERVICE_PORT=50110
+DCTM20_RDBMS=oracle
+DCTM20_DATABASE_OWNER=${DCTM20_DOCBASE}
+DCTM20_DATABASE_PASSWORD=${DCTM20_DOCBASE}
+[[ ${DCTM1_RDBMS} == "postgres" ]] && DCTM20_DB_SERVER_PORT=5412
+DCTM20_ROOT=${dctm_root}/${DCTM20_DOCBASE}
+DCTM20_HOST=cs2
+DCTM20_INSTALL_OWNER=${dctm_owner}
+DCTM20_INSTALL_PASSWORD=${DCTM20_INSTALL_OWNER}
+DCTM20_DOCBROKER_NAME=docbroker
+DCTM20_DOCBROKER_PORT=1489
+DCTM20_SERVER_HTTP_PORT=9780
+DCTM20_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# DCTMx;
+DCTMx_DOCBASE=the_best_one
+DCTMx_DOCBASE_ID=10099
+DCTMx_SERVICE_NAME=${DCTMx_DOCBASE}
+DCTMx_SERVICE_PORT=50099
+DCTMx_RDBMS=postgres
+DCTMx_DATABASE_OWNER=${DCTMx_DOCBASE}
+DCTMx_DATABASE_PASSWORD=${DCTMx_DOCBASE}
+[[ ${DCTMx_RDBMS} == "postgres" ]] && DCTMx_DB_SERVER_PORT=5492
+DCTMx_ROOT=${dctm_root}/${DCTMx_DOCBASE}
+DCTMx_HOST=cs2
+DCTMx_INSTALL_OWNER=${dctm_owner}
+DCTMx_INSTALL_PASSWORD=${DCTMx_INSTALL_OWNER}
+DCTMx_DOCBROKER_NAME=docbrokerx
+DCTMx_DOCBROKER_PORT=1499
+DCTMx_SERVER_HTTP_PORT=9780
+DCTMx_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# BOOKSTORE;
+BOOKSTORE_DOCBASE=bookstore
+BOOKSTORE_DOCBASE_ID=20000
+BOOKSTORE_SERVICE_NAME=${BOOKSTORE_DOCBASE}
+BOOKSTORE_SERVICE_PORT=60000
+BOOKSTORE_RDBMS=postgres
+BOOKSTORE_DATABASE_OWNER=${BOOKSTORE_DOCBASE}
+BOOKSTORE_DATABASE_PASSWORD=${BOOKSTORE_DOCBASE}
+[[ ${BOOKSTORE_RDBMS} == "postgres" ]] && BOOKSTORE_DB_SERVER_PORT=6000
+BOOKSTORE_ROOT=${dctm_root}/${BOOKSTORE_DOCBASE}
+BOOKSTORE_HOST=cs2
+BOOKSTORE_INSTALL_OWNER=${dctm_owner}
+BOOKSTORE_INSTALL_PASSWORD=${BOOKSTORE_DOCBASE}
+BOOKSTORE_DOCBROKER_NAME=docbrokerbs
+BOOKSTORE_DOCBROKER_PORT=1600
+BOOKSTORE_SERVER_HTTP_PORT=9900
+BOOKSTORE_SERVER_HTTP_MEMORY="-Xms512m -Xmx1024m"
+
+# display the info of the given docbase passed as a stem;
+# stem is one of the stem defined in this file, or SEED or ACTIVE;
+# the last 2 stems are dynamic ones and correspond to roles of the docbase, either SEED when instantiating a repository to the ACTIVE one, or ACTIVE only when creating a new repository;
+function show_repo() {
+   local stem="$1"
+   local title="$2"
+   [[ ! -z "${title}" ]] && title="${title} "
+   local tmp
+   tmp=${stem}_DOCBASE; tmp=${!tmp}
+   echo "${title}docbase name is            : ${tmp}"
+   tmp=${stem}_DOCBASE_ID; tmp=${!tmp}
+   echo "${title}docbase id is              : ${tmp}"
+   tmp=${stem}_SERVICE_NAME; tmp=${!tmp}
+   echo "${title}docbase service name is    : ${tmp}"
+   tmp=${stem}_SERVICE_PORT; tmp=${!tmp}
+   echo "${title}docbase service port is    : ${tmp}"
+   tmp=${stem}_HOST; tmp=${!tmp}
+   echo "${title}docbase host is            : ${tmp}"
+   tmp=${stem}_ROOT; tmp=${!tmp}
+   echo "${title}docbase root directory is  : ${tmp}"
+   tmp=${stem}_INSTALL_OWNER; tmp=${!tmp}
+   echo "${title}docbase owner is           : ${tmp}"
+   tmp=${stem}_INSTALL_PASSWORD; tmp=${!tmp}
+   echo "${title}installer password is      : ${tmp}"
+   tmp=${stem}_DOCBROKER_NAME; tmp=${!tmp}
+   echo "${title}docbase docbroker name     : ${tmp}"
+   tmp=${stem}_DOCBROKER_PORT; tmp=${!tmp}
+   echo "${title}docbase docbroker port     : ${tmp}"
+
+   tmp=${stem}_RDBMS; tmp=${!tmp}
+   echo "${title}RDBMS is                   : ${tmp}"
+   local db="${tmp}"
+   tmp=${stem}_DATABASE_OWNER; tmp=${!tmp}
+   echo "${title}database owner is          : ${tmp}"
+   tmp=${stem}_DATABASE_PASSWORD; tmp=${!tmp}
+   echo "${title}database password is       : ${tmp}"
+   if [[ "${db}" == "postgres" ]]; then
+      tmp=${stem}_DB_SERVER_PORT; tmp=${!tmp}
+      echo "${title}database server port is    : ${tmp}"
+   else
+      echo "${title}database server port is    : N/A"
+   fi
+
+   tmp=${stem}_SERVER_HTTP_PORT; tmp=${!tmp}
+   echo "${title}docbase http server port   : ${tmp}"
+   tmp=${stem}_SERVER_HTTP_MEMORY; tmp=${!tmp}
+   echo "${title}docbase http server memory : ${tmp}"
+   echo "Scripts'dir is ${scripts_dir}"
+}
+
+# display the currently active docbase's info;
+function show_active() {
+   show_repo ACTIVE Active 
+}
+
+# display the current SEED docbase's info;
+function show_seed() {
+   show_repo SEED Seed 
+}
+
+# appoint a repository as the SEED to be cloned or the ACTIVE to be cloned into;
+# therefore, any docbase can have any role, seed or target !
+# a role are is either SEED or ACTIVE;
+# stem is one of the stems defined in this file;
+# Usage:
+#    set_role role stem
+# with role one of SEED | ACTIVE
+# e.g.:
+#    set_role SEED DCTM2
+#    set_role ACTIVE BOOKSTORE
+function set_role() {
+   local role="$1"
+   local stem="$2"
+   local tmp
+   tmp=${stem}_DOCBASE;            export ${role}_DOCBASE=${!tmp}
+   tmp=${stem}_DOCBASE_ID;         export ${role}_DOCBASE_ID=${!tmp}
+   tmp=${stem}_SERVICE_NAME;       export ${role}_SERVICE_NAME=${!tmp}
+   tmp=${stem}_SERVICE_PORT;       export ${role}_SERVICE_PORT=${!tmp}
+   tmp=${stem}_HOST; export        export ${role}_HOST=${!tmp}
+   tmp=${stem}_ROOT; export        export ${role}_ROOT=${!tmp}
+   tmp=${stem}_INSTALL_OWNER;      export ${role}_INSTALL_OWNER=${!tmp}
+   tmp=${stem}_INSTALL_PASSWORD;   export ${role}_INSTALL_PASSWORD=${!tmp}
+   tmp=${stem}_DOCBROKER_NAME;     export ${role}_DOCBROKER_NAME=${!tmp}
+   tmp=${stem}_DOCBROKER_PORT;     export ${role}_DOCBROKER_PORT=${!tmp}
+
+   tmp=${stem}_RDBMS;              export ${role}_RDBMS=${!tmp}
+   local rdbms=${!tmp}
+   tmp=${stem}_DATABASE_OWNER;     export ${role}_DATABASE_OWNER=${!tmp}
+   tmp=${stem}_DATABASE_PASSWORD;  export ${role}_DATABASE_PASSWORD=${!tmp}
+   if [[ "${rdbms}" == "postgres" ]]; then
+      tmp=${stem}_DB_SERVER_PORT;  export ${role}_DB_SERVER_PORT=${!tmp}
+   else
+                                   export ${role}_DB_SERVER_PORT=""
+   fi
+
+   tmp=${stem}_SERVER_HTTP_PORT;   export ${role}_SERVER_HTTP_PORT=${!tmp}
+   tmp=${stem}_SERVER_HTTP_MEMORY; export ${role}_SERVER_HTTP_MEMORY="${!tmp}"
+
+   show_repo $role $role
+}
+
+if [[ $# -eq 0 ]]; then
+   # choose the hard-coded docbase to be created when no command-line parameter has been passed;
+   # once created, this docbase can be used as a model, or seed;
+   # can be overridden with a command-line parameter;
+   set_role ACTIVE DCTM0
+elif [[ $# -eq 1 ]]; then
+   # override the hard-coded value;
+   # for docbase creation;
+   set_role ACTIVE ${1}
+elif [[ $# -eq 2 ]]; then
+   # for docbase instantiation of $1 to $2;
+   set_role SEED ${1}
+   set_role ACTIVE ${2}
+else
+   cat - <<eou
+Invalid number of arguments
+Usage
+   . global_parameters [seed_repo [new_repo]]
+where:
+   seed_repo is the stem of the repository to be created or used as a seed;
+   it defaults to DCTM0 and is used in create_docbase.sh and instantiate_docbase.sh.
+   for creation, it points to the specs of the docbase to be created and that can be used later as a seed;
+   for instantiation, seed_repo is the stem of the repository to be taken as the seed during the instantiation and new_repo is the one of the docbase to instantiate.
+   all repositories must have their specs defined in the present global_parameters file.
+eou
+   rc=1
+fi
+
+rc=0
+# common setting for all the repositories, seed or instantiated;
+# currently, one of oracle or postgres RDBMS is supported;
+if [[ "${ACTIVE_RDBMS}" == "oracle" ]]; then
+   cs_package=documentum_server_22.4_linux64_oracle.tar
+   oracle_download_url=https://download.oracle.com/otn_software/linux/instantclient/217000
+   oracle_ic_basic=instantclient-basic-linux.x64-21.7.0.0.0dbru.zip
+   oracle_ic_sqlplus=instantclient-sqlplus-linux.x64-21.7.0.0.0dbru.zip
+   db_server_host_account=oracle
+   db_server_host_password=${db_server_host_account}
+   db_server_host_alias=db
+   db_server_host_ip_address=192.168.0.21
+   db_listener_port=1521
+   # although distinct concepts, the connect string and the service name must be equal to satisfy the migration utility;
+   db_connect_string=pdb1
+   db_service_name=pdb1
+   db_sys_account=sys
+   db_sys_password=${db_sys_account}
+   db_datafile_root=/u02/oradata/ORCL/${db_service_name}
+   db_remote_connect_string=orcl
+elif [[ "${ACTIVE_RDBMS}" == "postgres" ]]; then
+   cs_package=documentum_server_22.4_linux64_postgres.tar
+   postgresql_download_url=https://ftp.postgresql.org/pub/source
+   jdbc_postgresql_download_url=https://jdbc.postgresql.org/download
+   postgresql_package=postgresql-15.1.tar.gz
+   postgresql_custom_package=postgresql-15.1_bin.tgz
+   # set this to yes or no if a compilation is needed to produce the custom package instead of using $postgresql_custom_package;
+   postgresql_compile=no
+   postgresql_jdbc_package=postgresql-42.5.1.jar
+   db_server_host_alias=localhost
+   db_connect_string=${ACTIVE_DOCBASE}
+else
+   echo "Invalid or Unsupported RDBMS [${ACTIVE_RDBMS}]"
+   rc=1
+fi
