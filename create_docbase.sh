@@ -1009,7 +1009,7 @@ alias tms='tail -f \$DM_JMS_HOME/logs/DmMethods.log'
 alias bounced='dm_shutdown_\${ACTIVE_DOCBASE}; dm_start_\${ACTIVE_DOCBASE}'
 
 # bouncedb, for bounce Broker, stop/start the docbroker by minimizing the lost connectivity to the repository;
-alias bounceb='n=\$(mktemp -u); mkfifo \$n; ( tail -f \$n | iiapi ) & dm_stop_docbroker; dm_launch_docbroker; echo "reinit,c,\${ACTIVE_DOCBASE},T" > \$n; echo "quit" > \$n; rm \$n'
+alias bounceb='n=\$(mktemp -u); mkfifo \$n; ( tail -f \$n | iiapi ) & dm_stop_${ACTIVE_DOCBROKER_NAME}; dm_launch_${ACTIVE_DOCBROKER_NAME}; echo "reinit,c,\${ACTIVE_DOCBASE},T" > \$n; echo "quit" > \$n; rm \$n'
 
 # bouncems, for bounce method server;
 alias bouncems='\${DM_JMS_HOME}/bin/stopMethodServer.sh; sleep 5; \${DM_JMS_HOME}/bin/startMethodServer.sh'
