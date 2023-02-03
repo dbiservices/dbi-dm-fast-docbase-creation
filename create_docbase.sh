@@ -905,17 +905,29 @@ function str {
    echo "testing the docbroker \${docbroker_name}"
    local docbroker_port=\$(egrep "PORT=" \${DOCUMENTUM}/dba/dm_documentum_config.txt | cut -d= -f2)
    echo "status of docbroker \${docbroker_name} on port \${docbroker_port}"
-   if dmqdocbroker -p \${docbroker_port} -c ping 2>&1 > /dev/null; then echo "running"; else echo "not running"; fi
+   if dmqdocbroker -p \${docbroker_port} -c ping 2>&1 > /dev/null; then echo -e "\\e[0;32mthe broker is running\\e[m"; else echo -e "\\e[0;31mthe broker is not running\\e[m"; fi
 
    echo
    echo "testing connection to repository \${ACTIVE_DOCBASE}"
    iapi -q \${ACTIVE_DOCBASE} -Udmadmin -Pxx
+   if [[ \$? -eq 1 ]]; then
+      echo -e "\\e[0;31mthe repository is not running\\e[m"
+   else
+      echo -e "\\e[0;32mthe repository is running\\e[m"
+   fi
 
    local http_server_port=\$(grep "Connector Server=\"" \${DM_JMS_HOME}/conf/server.xml | sed -E "s|^.+ port=\"([0-9]+)\".+\$|\1|")
    echo
    echo "testing method server listening on port \${http_server_port}"
    curl http://localhost:\${http_server_port}/DmMethods/servlet/DoMethod
    curl http://localhost:\${http_server_port}/DmMail/servlet/DoMail
+   rc=\$?
+   echo
+   if [[ \${rc} -eq 0 ]]; then
+      echo -e "\\e[0;32mthe method server is running\\e[m"
+   else
+      echo -e "\\e[0;31mthe method server is not running\\e[m"
+   fi
    echo
 
    [[ \${current_docbase} != \${repo} ]] && swr \${current_docbase} > /dev/null && popd 2> /dev/null 1> /dev/null
@@ -1002,11 +1014,35 @@ alias bounceb='n=\$(mktemp -u); mkfifo \$n; ( tail -f \$n | iiapi ) & dm_stop_do
 # bouncems, for bounce method server;
 alias bouncems='\${DM_JMS_HOME}/bin/stopMethodServer.sh; sleep 5; \${DM_JMS_HOME}/bin/startMethodServer.sh'
 
+# stop & start components;
+alias stopr=dm_shutdown_\${ACTIVE_DOCBASE}
+alias startr=dm_start_\${ACTIVE_DOCBASE}
+alias stopb=dm_stop_${ACTIVE_DOCBROKER_NAME}
+alias startb=dm_launch_${ACTIVE_DOCBROKER_NAME}
+alias stopms=\${DM_JMS_HOME}/bin/stopMethodServer.sh
+alias startms=\${DM_JMS_HOME}/bin/startMethodServer.sh
+
 # interactive utilities;
+alias iapi='rlwrap --no-warnings --filter="pipeline simple_macro:pipeto" --ansi-colour-aware --prompt-colour=GREEN --multi-line='__' iapi'
+alias idql='rlwrap --no-warnings --filter="pipeline simple_macro:pipeto" --ansi-colour-aware --prompt-colour=GREEN --multi-line='__' idql'
 alias iiapi='iapi \${ACTIVE_DOCBASE} -U${ACTIVE_INSTALL_OWNER} -Pxx'
 alias iidql='idql \${ACTIVE_DOCBASE} -U${ACTIVE_INSTALL_OWNER} -Pxx'
-$(if [[ "${ACTIVE_RDBMS}" == "postgres" ]]; then echo "alias iisql='isql \${ACTIVE_DOCBASE}'; alias ipsql='\${POSTGRESQL_HOME}/bin/psql --port=${ACTIVE_DB_SERVER_PORT} --host=/tmp \${ACTIVE_DOCBASE}'"; fi)
-$(if [[ "${ACTIVE_RDBMS}" == "oracle" ]]; then echo "alias isqlp='sqlplus ${ACTIVE_DATABASE_OWNER}/${ACTIVE_DATABASE_PASSWORD}@${db_connect_string}'"; fi)
+eos
+if [[ "${ACTIVE_RDBMS}" == "postgres" ]]; then
+   cat - <<eos >> ${ACTIVE_ROOT}/${ACTIVE_DOCBASE}.env
+      echo "alias isql='rlwrap --no-warnings --filter="pipeline simple_macro:pipeto" --ansi-colour-aware --prompt-colour=GREEN --multi-line='__' isql'"
+      echo "alias iisql='isql \${ACTIVE_DOCBASE}'"
+      echo "alias psql='rlwrap --no-warnings --filter="pipeline simple_macro:pipeto" --ansi-colour-aware --prompt-colour=GREEN --multi-line='__' \${POSTGRESQL_HOME}/bin/psql'"
+      echo "alias ipsql='psql --port=${ACTIVE_DB_SERVER_PORT} --host=/tmp \${ACTIVE_DOCBASE}'"
+eos
+elif [[ "${ACTIVE_RDBMS}" == "oracle" ]]; then
+   cat - <<eos >> ${ACTIVE_ROOT}/${ACTIVE_DOCBASE}.env
+      echo "alias sqlplus='rlwrap --no-warnings --filter="pipeline simple_macro:pipeto" --ansi-colour-aware --prompt-colour=GREEN --multi-line='__' sqlplus'" 
+      echo "alias isqlp='sqlplus ${ACTIVE_DATABASE_OWNER}/${ACTIVE_DATABASE_PASSWORD}@${db_connect_string}'" 
+eos
+fi
+
+cat - <<eos >> ${ACTIVE_ROOT}/${ACTIVE_DOCBASE}.env
 
 # clean up environment from repository references;
 # just leave swr and rmra;
